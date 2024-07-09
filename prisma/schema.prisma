@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  address_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String   @db.Uuid
+  location   String   @db.VarChar
+  latitude   String   @db.VarChar(100)
+  longitude  String   @db.VarChar(100)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  orders     orders[]
+}
+
+model cart_foods {
+  cart_food_id String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cart_id      String    @db.Uuid
+  food_id      String    @db.Uuid
+  qty          Decimal   @db.Decimal(10, 2)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+  carts        carts     @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade)
+  foods        foods     @relation(fields: [food_id], references: [food_id], onDelete: Cascade)
+}
+
+model carts {
+  cart_id                      String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  buyer_id                     String       @db.Uuid
+  seller_id                    String       @db.Uuid
+  is_order                     Boolean?     @default(false)
+  created_at                   DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at                   DateTime?    @default(now()) @db.Timestamp(6)
+  cart_foods                   cart_foods[]
+  users_carts_buyer_idTousers  users        @relation("carts_buyer_idTousers", fields: [buyer_id], references: [user_id], onDelete: Cascade)
+  users_carts_seller_idTousers users        @relation("carts_seller_idTousers", fields: [seller_id], references: [user_id], onDelete: Cascade)
+  orders                       orders[]
+}
+
+model categories {
+  category_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String @db.VarChar(30)
+  icon        String @db.VarChar(255)
+}
+
+model cooking_steps {
+  cooking_step_id String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  recipe_id       String  @db.Uuid
+  step_number     Int
+  image           String? @db.VarChar(255)
+  description     String  @db.VarChar(255)
+  recipes         recipes @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+}
+
+model cuisines {
+  cuisine_id String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String    @db.VarChar(100)
+  recipes    recipes[]
+}
+
+model feedbacks {
+  feedback_id     String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parent_id       String?     @db.Uuid
+  food_id         String      @db.Uuid
+  commentator     String      @db.Uuid
+  comment         String      @db.VarChar
+  feedback_date   DateTime?   @default(now()) @db.Timestamp(6)
+  users           users       @relation(fields: [commentator], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  foods           foods       @relation(fields: [food_id], references: [food_id], onDelete: NoAction, onUpdate: NoAction)
+  feedbacks       feedbacks?  @relation("feedbacksTofeedbacks", fields: [parent_id], references: [feedback_id], onDelete: NoAction, onUpdate: NoAction)
+  other_feedbacks feedbacks[] @relation("feedbacksTofeedbacks")
+
+  @@index([parent_id], map: "idx_parent_id")
+}
+
+model follows {
+  follow_id                         String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  following_id                      String @db.Uuid
+  follower_id                       String @db.Uuid
+  users_follows_follower_idTousers  users  @relation("follows_follower_idTousers", fields: [follower_id], references: [user_id], onDelete: Cascade)
+  users_follows_following_idTousers users  @relation("follows_following_idTousers", fields: [following_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([follower_id, following_id])
+  @@index([follower_id], map: "idx_follower_id")
+  @@index([following_id], map: "idx_following_id")
+}
+
+model food_bookmark {
+  user_id String @db.Uuid
+  food_id String @db.Uuid
+  foods   foods  @relation(fields: [food_id], references: [food_id], onDelete: Cascade)
+  users   users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@id([user_id, food_id])
+}
+
+model foods {
+  food_id       String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  seller_id     String          @db.Uuid
+  category_id   String          @db.Uuid
+  food_name     String          @db.VarChar(100)
+  description   String          @db.VarChar
+  price         Decimal         @db.Decimal(10, 2)
+  star_average  Float?          @default(0)
+  total_rater   Int?            @default(0)
+  image         String          @db.VarChar(255)
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime        @default(now()) @db.Timestamp(6)
+  is_bookmarked Boolean         @default(false)
+  cart_foods    cart_foods[]
+  feedbacks     feedbacks[]
+  food_bookmark food_bookmark[]
+  users         users           @relation(fields: [seller_id], references: [user_id], onDelete: Cascade)
+  rates         rates[]
+
+  @@index([food_name], map: "idx_food_name")
+  @@index([price], map: "idx_price")
+  @@index([seller_id], map: "idx_seller_id")
+}
+
+model grocery_ingredient {
+  grocery_id    String        @db.Uuid
+  ingredient_id String        @db.Uuid
+  is_bought     Boolean       @default(false)
+  grocery_lists grocery_lists @relation(fields: [grocery_id], references: [grocery_id], onDelete: Cascade)
+  ingredients   ingredients   @relation(fields: [ingredient_id], references: [ingredient_id], onDelete: Cascade)
+
+  @@id([grocery_id, ingredient_id])
+}
+
+model grocery_lists {
+  grocery_id         String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id            String               @db.Uuid
+  title              String               @db.VarChar(100)
+  grocery_ingredient grocery_ingredient[]
+  users              users                @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  grocery_recipe     grocery_recipe[]
+}
+
+model grocery_recipe {
+  grocery_id    String        @db.Uuid
+  recipe_id     String        @db.Uuid
+  grocery_lists grocery_lists @relation(fields: [grocery_id], references: [grocery_id], onDelete: Cascade)
+  recipes       recipes       @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+
+  @@id([grocery_id, recipe_id])
+}
+
+model ingredients {
+  ingredient_id      String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id            String?              @db.Uuid
+  icon               String               @db.VarChar
+  name               String               @db.VarChar(100)
+  type               String               @db.VarChar(100)
+  is_bought          Boolean?             @default(false)
+  grocery_ingredient grocery_ingredient[]
+  users              users?               @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  recipe_ingredient  recipe_ingredient[]
+}
+
+model notifications {
+  notification_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  senderid        String   @db.Uuid
+  title           String   @db.VarChar(100)
+  description     String   @db.VarChar(255)
+  type            String   @db.VarChar(50)
+  date            DateTime @default(now()) @db.Timestamp(6)
+  recipientid     String?  @db.Uuid
+  users           users    @relation(fields: [senderid], references: [user_id], onDelete: Cascade, map: "notifications_user_id_fkey")
+}
+
+model orders {
+  order_id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cart_id          String    @db.Uuid
+  payment_id       String?   @db.Uuid
+  address_id       String    @db.Uuid
+  description      String?   @db.VarChar(255)
+  total_amount     Decimal   @db.Decimal(10, 2)
+  status           String?   @default("មិនទាន់ចម្អិន") @db.VarChar(255)
+  phone_number     String?   @db.VarChar(10)
+  is_order_request String?   @default("pending") @db.VarChar(10)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @default(now()) @db.Timestamp(6)
+  addresses        addresses @relation(fields: [address_id], references: [address_id], onDelete: Cascade)
+  carts            carts     @relation(fields: [cart_id], references: [cart_id], onDelete: Cascade)
+}
+
+model otps {
+  otp_id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  otp_code           String   @db.VarChar(6)
+  issued_at          DateTime @default(now()) @db.Timestamp(6)
+  expired_date       DateTime @db.Timestamp(6)
+  is_verified        Boolean  @default(false)
+  user_id            String   @db.Uuid
+  is_verified_forget Boolean
+  users              users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  transaction_id String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  buyer_id       String   @db.Uuid
+  payment_status String   @default("unpaid") @db.VarChar(50)
+  mode           String   @db.VarChar(50)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  users          users    @relation(fields: [buyer_id], references: [user_id], onDelete: Cascade)
+}
+
+model rates {
+  rate_id String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  food_id String @db.Uuid
+  rater   String @db.Uuid
+  star    Int
+  foods   foods  @relation(fields: [food_id], references: [food_id], onDelete: Cascade)
+  users   users  @relation(fields: [rater], references: [user_id], onDelete: Cascade)
+}
+
+model recipe_bookmark {
+  user_id   String  @db.Uuid
+  recipe_id String  @db.Uuid
+  recipes   recipes @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  users     users   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@id([user_id, recipe_id])
+}
+
+model recipe_ingredient {
+  recipe_id     String      @db.Uuid
+  ingredient_id String      @db.Uuid
+  qty           String      @default("string") @db.VarChar(100)
+  ingredients   ingredients @relation(fields: [ingredient_id], references: [ingredient_id], onDelete: Cascade)
+  recipes       recipes     @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+
+  @@id([recipe_id, ingredient_id])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model recipe_tag {
+  recipe_id String  @db.Uuid
+  tag_id    String  @db.Uuid
+  recipes   recipes @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  tags      tags    @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+
+  @@ignore
+}
+
+model recipes {
+  recipe_id         String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  cuisine_id        String              @db.Uuid
+  image             String?             @db.VarChar(255)
+  description       String?             @db.VarChar(255)
+  cooking_level     String?             @db.VarChar(100)
+  cooking_time      Int?
+  serving_number    Int?
+  title             String?             @db.VarChar(100)
+  is_draft          Boolean?            @default(false)
+  is_public         Boolean?            @default(false)
+  is_bookmarked     Boolean?            @default(false)
+  creator           String              @db.Uuid
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  cooking_steps     cooking_steps[]
+  grocery_recipe    grocery_recipe[]
+  recipe_bookmark   recipe_bookmark[]
+  recipe_ingredient recipe_ingredient[]
+  recipe_tag        recipe_tag[]        @ignore
+  users             users               @relation(fields: [creator], references: [user_id], onDelete: Cascade)
+  cuisines          cuisines            @relation(fields: [cuisine_id], references: [cuisine_id], onDelete: Cascade)
+  reports           reports[]
+
+  @@index([cooking_level], map: "idx_cooking_level")
+  @@index([cuisine_id], map: "idx_cuisine_id")
+  @@index([is_draft], map: "idx_is_draft")
+  @@index([title], map: "idx_title")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reports {
+  report_id                     String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  recipe_id                     String?   @db.Uuid
+  reporter                      String    @db.Uuid
+  user_id                       String?   @db.Uuid
+  description                   String    @db.VarChar(255)
+  created_at                    DateTime? @default(now()) @db.Timestamp(6)
+  type                          String    @db.VarChar(100)
+  recipes                       recipes?  @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade)
+  users_reports_reporterTousers users     @relation("reports_reporterTousers", fields: [reporter], references: [user_id], onDelete: Cascade)
+  users_reports_user_idTousers  users?    @relation("reports_user_idTousers", fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([recipe_id, reporter], map: "unique_recipe_reporter")
+}
+
+model tags {
+  tag_id     String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  icons      String       @db.VarChar(100)
+  name       String       @db.VarChar(150)
+  type       String       @db.VarChar(50)
+  recipe_tag recipe_tag[] @ignore
+}
+
+model tokens {
+  tokenid            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userid             String    @db.Uuid
+  accesstoken        String    @db.VarChar(512)
+  refreshtoken       String    @db.VarChar(512)
+  accesstokenexpiry  DateTime  @db.Timestamptz(6)
+  refreshtokenexpiry DateTime  @db.Timestamptz(6)
+  created_at         DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime? @default(now()) @db.Timestamptz(6)
+  users              users     @relation(fields: [userid], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  user_id                             String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username                            String            @db.VarChar(50)
+  email                               String            @db.VarChar(100)
+  password                            String            @db.VarChar(80)
+  profile_image                       String            @db.VarChar(255)
+  bio                                 String?           @db.VarChar(120)
+  is_deactivated                      Boolean?          @default(false)
+  role                                String?           @default("user") @db.VarChar(50)
+  followings_count                    Int?              @default(0)
+  follower_count                      Int?              @default(0)
+  addresses                           addresses[]
+  carts_carts_buyer_idTousers         carts[]           @relation("carts_buyer_idTousers")
+  carts_carts_seller_idTousers        carts[]           @relation("carts_seller_idTousers")
+  feedbacks                           feedbacks[]
+  follows_follows_follower_idTousers  follows[]         @relation("follows_follower_idTousers")
+  follows_follows_following_idTousers follows[]         @relation("follows_following_idTousers")
+  food_bookmark                       food_bookmark[]
+  foods                               foods[]
+  grocery_lists                       grocery_lists[]
+  ingredients                         ingredients[]
+  notifications                       notifications[]
+  otps                                otps[]
+  payments                            payments[]
+  rates                               rates[]
+  recipe_bookmark                     recipe_bookmark[]
+  recipes                             recipes[]
+  reports_reports_reporterTousers     reports[]         @relation("reports_reporterTousers")
+  reports_reports_user_idTousers      reports[]         @relation("reports_user_idTousers")
+  tokens                              tokens[]
+}
