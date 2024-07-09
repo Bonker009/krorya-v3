@@ -85,3 +85,16 @@
     height: 100dvh;
   }
 }
+
+.text-gradient {
+  background: linear-gradient(
+    90deg,
+    #ae8e3e 0%,
+    #af8620 37.5%,
+    rgba(50, 38, 8, 0.89) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
