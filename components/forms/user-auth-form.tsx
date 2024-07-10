@@ -18,7 +18,10 @@ import * as z from 'zod';
 import GoogleSignInButton from '../github-auth-button';
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Enter a valid email address' })
+  email: z.string().email({ message: 'Enter a valid email address' }),
+  password: z
+    .string()
+    .min(8, { message: 'Password must be at least 8 characters' })
 });
 
 type UserFormValue = z.infer<typeof formSchema>;
@@ -38,7 +41,8 @@ export default function UserAuthForm() {
   const onSubmit = async (data: UserFormValue) => {
     signIn('credentials', {
       email: data.email,
-      callbackUrl: callbackUrl ?? '/dashboard'
+      password: data.password,
+      callbackUrl: callbackUrl ?? '/user'
     });
   };
 
@@ -59,6 +63,24 @@ export default function UserAuthForm() {
                   <Input
                     type="email"
                     placeholder="Enter your email..."
+                    disabled={loading}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password..."
                     disabled={loading}
                     {...field}
                   />
