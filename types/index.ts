@@ -1,4 +1,6 @@
 import { Icons } from '@/components/icons';
+import { Decimal } from '@prisma/client/runtime/library';
+import { UUID } from 'crypto';
 
 export interface NavItem {
   title: string;
@@ -27,6 +29,17 @@ export interface FooterItem {
   }[];
 }
 
+export interface Food {
+  food_id: UUID;
+  food_name: string;
+  price: Decimal;
+  star_average: number;
+  total_rater: number;
+  image: string;
+  created_at: Date;
+  updated_at: Date;
+  is_bookmarked: boolean;
+}
 export type MainNavItem = NavItemWithOptionalChildren;
 
 export type SidebarNavItem = NavItemWithChildren;

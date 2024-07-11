@@ -120,7 +120,7 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'រុករកមុខម្ហូប',
-    href: '/dashboard/user',
+    href: '/explore-food',
     icon: 'notebook',
     label: 'រុករកមុខម្ហូប'
   },
