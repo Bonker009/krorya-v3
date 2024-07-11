@@ -1,7 +1,6 @@
+import prisma from '@/prisma/db';
 import { Food } from '@/types';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
 export async function getFoods(): Promise<Food[]> {
   const result = await prisma.foods.findMany({
     select: {

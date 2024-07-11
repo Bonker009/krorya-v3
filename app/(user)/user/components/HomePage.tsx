@@ -5,7 +5,12 @@ import { categories } from '@/lib/category-data';
 import CategoryCard from './CategoryCard';
 import RecipeCard from './RecipeCard';
 import FoodCard from './Foodcard';
-const HomePage = ({ recipeList }: any) => {
+import { Food, Recipe } from '@/types';
+interface HomePageProps {
+  foodsList: Food[];
+  recipeList: Recipe[];
+}
+const HomePage = ({ recipeList, foodsList }: HomePageProps) => {
   return (
     <ScrollArea className="h-full">
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -15,7 +20,7 @@ const HomePage = ({ recipeList }: any) => {
           <div className="flex items-center justify-between">
             <div className="w-1/2 min-w-0 p-4">
               <h1 className="text-gradient text-4xl font-bold">
-                ស្វាគមន៍មកកាន់ក្រយ៉ា
+                ស្វាគមន៍មកកាន់ក្រយា
               </h1>
               <p className="my-4">
                 ម្ហូបខ្មែរ មានច្រើនសណ្ឋានដូចជា ស្ល ឆា ចៀន ស្ងោរ ជាដើម
@@ -76,11 +81,10 @@ const HomePage = ({ recipeList }: any) => {
                   មើលទាំងអស់
                 </Link>
               </div>
-              <div className='grid grid-cols-4'>
-                <FoodCard />
-                <FoodCard />
-                <FoodCard />
-                <FoodCard />
+              <div className="grid grid-cols-4">
+                {foodsList?.map((food, index) => (
+                  <FoodCard key={food.food_id} {...food} />
+                ))}
               </div>
             </div>
           </div>

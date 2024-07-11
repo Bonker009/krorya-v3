@@ -40,6 +40,13 @@ export interface Food {
   updated_at: Date;
   is_bookmarked: boolean;
 }
+export interface Recipe {
+  recipe_id: UUID;
+  image: string;
+  title: string;
+  cooking_level: string;
+  cooking_time: number;
+}
 export type MainNavItem = NavItemWithOptionalChildren;
 
 export type SidebarNavItem = NavItemWithChildren;
